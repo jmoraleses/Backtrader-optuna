@@ -1,0 +1,11 @@
+matplotlib==3.2.0rc1
+backtrader
+optuna
+optunity
+backtrader_plotting
+requests
+dask-optuna
+pandas
+sqlalchemy
+joblib
+#python3-tk
