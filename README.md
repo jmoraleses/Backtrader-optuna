@@ -1,6 +1,6 @@
 # Backtrader-optuna
 Estrategia básica para trading con backtrader y optuna.
-Script escrito para Python 3.7, utiliza las librerías backtrader y optuna para encontrar porcentajes de ganancia y perdidas optimos para tendencias alcista y bajistas.
+Script escrito para Python 3.7, utiliza las librerías backtrader y optuna para encontrar porcentajes de ganancia y pérdidas óptimos para tendencias alcista y bajistas.
 Utiliza un algoritmo evolutivo de maximización para encontrarlos.
 Los datos necesarios son descargados desde el exchange Binance.
 En la primera ejecución se descargará y guardará el archivo CSV con los datos.
