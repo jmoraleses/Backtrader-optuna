@@ -15,4 +15,4 @@ python criptofind.py -s SLP/USDT -t 2h -hora "02/05/2021 00:00:00" -cash 100 -cy
 python criptofind.py
 
 ## A mejorar
-No tengo mas tiempo que dedicarle a este proyecto, así que debo avisar de que durante la primera ejecución se descargan los datos en formato CSV, y no es hasta la segunda ejecución que una vez comprobado que se han descargado los datos pasa a realizar el proceso de analisis y búsqueda.
+No tengo mas tiempo que dedicarle a este proyecto, así que debo avisar de que durante la primera ejecución se descargan los datos en formato CSV, y no es hasta la segunda ejecución que una vez comprobado que se han descargado los datos pasa a realizar el proceso de análisis y búsqueda.
