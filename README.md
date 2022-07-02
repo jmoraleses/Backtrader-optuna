@@ -1,6 +1,6 @@
 # Backtrader-optuna
 Estrategia básica para trading con backtrader y optuna.
-Script escrito para Python 3.7, utiliza las librerías backtrader y optuna para encontrar máximos beneficios y mínimas perdidas. Utiliza un algoritmo evolutivo de maximización para encontrarlos.
+Script escrito para Python 3.7, utiliza las librerías backtrader y optuna para encontrar máximos beneficios. Utiliza un algoritmo evolutivo de maximización para encontrarlos.
 Los datos necesarios son descargados desde el exchange Binance. Requiere clave API en archivo criptofind.py.
 
 ## Instalar dependencias
