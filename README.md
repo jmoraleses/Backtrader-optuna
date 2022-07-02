@@ -8,6 +8,7 @@ python pip install -r requirements.txt
 
 ## Uso
 python criptofind.py -s SLP/USDT -t 2h -hora "02/05/2021 00:00:00" -cash 100 -cycle 100
+
 python criptofind.py -s BTC/USDT -t 30m -hora "02/05/2021 00:00:00" -cash 100 -cycle 1000
 
 ## Ayuda
