@@ -1,0 +1,47 @@
+//@version=4
+strategy(title="cryptos", shorttitle="cryptos",  default_qty_type=strategy.percent_of_equity, default_qty_value=100.0, initial_capital=100.0, precision=8, overlay=true) //default_qty_type=strategy.percent_of_equity, default_qty_value=10, overlay=true
+
+var price = open
+var begin = true
+var longTakeprofit = 1.0
+var longStoploss = 1.0
+var shortTakeprofit = 1.0
+var shortStoploss = 1.0
+var long = false
+var short = false
+var profitA = 1.0
+var lossA = 1.0
+var profitB = 1.0
+var lossB = 1.0
+var fin = false
+var y = 0.0
+var euros = 0.0
+var abierto = false
+
+
+profitA := 1.570173110761911
+lossA :=   0.6139438232090115
+profitB := 1.788102175824208 
+lossB :=  1.1373272588047958
+
+if (time > timestamp(2021, 04, 02, 00, 00)) 
+    
+    if ((open>=shortTakeprofit or open<=shortStoploss) and abierto==false) or begin==true
+        price := open
+        longTakeprofit := open * (profitA)
+        longStoploss := open * (lossA)
+        strategy.order("LONG", strategy.long)
+        begin:=false
+        abierto := true
+        
+    if ((open>=longTakeprofit or open<=longStoploss) and abierto ==true) and begin ==false
+        price := open
+        shortTakeprofit := open * (profitB)
+        shortStoploss := open * (lossB)
+        strategy.order("SHORT", strategy.short)
+        abierto :=false
+ 
+// plot(longStoploss, title='LONG STOP LOSS', linewidth=2, style=plot.style_linebr, color=color.red)
+// plot(longTakeprofit, title='LONG TAKE PROFIT', linewidth=2, style=plot.style_linebr, color=color.green)
+// plot(shortStoploss, title='SHORT STOP LOSS', linewidth=2, style=plot.style_linebr, color=color.red)
+// plot(shortTakeprofit, title='SHORT TAKE PROFIT', linewidth=2, style=plot.style_linebr, color=color.green)

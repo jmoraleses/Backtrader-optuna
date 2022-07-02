@@ -1,0 +1,66 @@
+//@version=4
+strategy(title="cryptos", shorttitle="cryptos",  default_qty_type=strategy.percent_of_equity, default_qty_value=100.0, initial_capital=100.0, precision=8, overlay=true) //default_qty_type=strategy.percent_of_equity, default_qty_value=10, overlay=true
+
+var price = open
+var begin = true
+var long = false
+var short = false
+var profitA = 1.0
+var lossA = 1.0
+var profitB = 1.0
+var lossB = 1.0
+var fin = false
+var y = 0.0
+var euros = 0.0
+var abierto = false
+
+
+// pbeneficio: 0.8613269318860787, pperdida: 1.207357354372215
+// pbeneficio: 0.887647943859629, pperdida: 1.048059167404591
+
+
+
+profitA := 0.84 //long  verde profit, que suba lo justo
+lossA :=   1.84 //long rojo stoploss justo por debajo de 1.0, mas bajo que profit de short?
+
+// profitB := 1.9902383468009306  //profit de short yellow, x por debajo de 1.0
+// lossB :=  1.146693785678958 //stoploss blue //desde 1, tiene que estar por encima del valor actual , es decir 1
+
+
+var longTakeprofit = open * (profitA)
+var longStoploss = open * (lossA)
+var shortTakeprofit = open * (profitA)
+var shortStoploss = open * (lossA)
+
+
+if (time > timestamp(2022, 01, 02, 00, 00))
+
+    // if abierto == false and open <= shortTakeprofit
+    //     abierto := false
+
+
+
+    if ((open<=shortTakeprofit or open>=shortStoploss) and abierto==false) or begin==true
+        price := open
+        longTakeprofit := open * (profitA)
+        longStoploss := open * (lossA)
+        // strategy.order("LONG", strategy.long)
+        strategy.close_all()
+        begin:=false
+        abierto := true
+
+
+    if ((open>=longTakeprofit or open<=longStoploss) and abierto==true) and begin==false
+        price := open
+        shortTakeprofit := open * (profitA)
+        shortStoploss := open * (lossA)
+        strategy.order("SHORT", strategy.short)
+        abierto :=false
+
+
+
+
+// plot(longStoploss, title='LONG STOP LOSS', linewidth=2, style=plot.style_linebr, color=color.red)
+// plot(longTakeprofit, title='LONG TAKE PROFIT', linewidth=2, style=plot.style_linebr, color=color.green)
+plot(shortStoploss, title='SHORT STOP LOSS', linewidth=2, style=plot.style_linebr, color=color.red)
+plot(shortTakeprofit, title='SHORT TAKE PROFIT', linewidth=2, style=plot.style_linebr, color=color.green)
