@@ -41,8 +41,7 @@ import joblib
 optuna.logging.set_verbosity(optuna.logging.WARNING)
 
 
-api_key = "xJVLmFGrJhFye4tAIP53ENEKi38UiyIa1jRJtcLW1OHGBwDYEOjYzTI3z6b1Wwc6"
-api_secret = "mBmRGr4MLZXd8NhlNtEWAkZaoMEMa4Z2otPfMNgatJ2eQYMBrBk7jvvhR3opRzGI"
+
 client = Client(api_key, api_secret)
 
 
