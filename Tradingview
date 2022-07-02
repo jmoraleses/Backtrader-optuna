@@ -13,9 +13,8 @@ var fin = false
 var y = 0.0
 var euros = 0.0
 var abierto = false
-
-
-// pbeneficio: 0.8613269318860787, pperdida: 1.207357354372215
+var pausa = 5
+//  0.9842597756653113, 'perlostA': 1.0004342165565687}
 // pbeneficio: 0.887647943859629, pperdida: 1.048059167404591
 
 
@@ -48,16 +47,16 @@ if (time > timestamp(2022, 01, 02, 00, 00))
         strategy.close_all()
         begin:=false
         abierto := true
+        pausa := 5
 
-
-    if ((open>=longTakeprofit or open<=longStoploss) and abierto==true) and begin==false
+    if ((open>=longTakeprofit or open<=longStoploss) and abierto==true) and begin==false and pausa <= 0
         price := open
         shortTakeprofit := open * (profitA)
         shortStoploss := open * (lossA)
         strategy.order("SHORT", strategy.short)
         abierto :=false
 
-
+    pausa := pausa - 1
 
 
 // plot(longStoploss, title='LONG STOP LOSS', linewidth=2, style=plot.style_linebr, color=color.red)

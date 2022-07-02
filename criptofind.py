@@ -41,8 +41,8 @@ import joblib
 optuna.logging.set_verbosity(optuna.logging.WARNING)
 
 
-api_key = "---"
-api_secret = "---"
+api_key = "xJVLmFGrJhFye4tAIP53ENEKi38UiyIa1jRJtcLW1OHGBwDYEOjYzTI3z6b1Wwc6"
+api_secret = "mBmRGr4MLZXd8NhlNtEWAkZaoMEMa4Z2otPfMNgatJ2eQYMBrBk7jvvhR3opRzGI"
 client = Client(api_key, api_secret)
 
 
@@ -264,6 +264,7 @@ class Bits(bt.Strategy):
     params = (
         ('perprofitA', 1),
         ('perlostA', 1),
+        ('pausaconst', 5),
         # ('perprofitB', 1),
         # ('perlostB', 1),
     )
@@ -271,6 +272,7 @@ class Bits(bt.Strategy):
     def __init__(self):
         self.porcentajeBeneficioA = self.params.perprofitA
         self.porcentajePerdidaA = self.params.perlostA
+        self.pausaconstante = self.params.pausaconst
         # self.porcentajeBeneficioB = self.params.perprofitB
         # self.porcentajePerdidaB = self.params.perlostB
         self.order = None
@@ -294,6 +296,7 @@ class Bits(bt.Strategy):
         # self.btc = 0.0 #self.coins
         self.eur = 0.0
         self.abierto = False
+        self.pausa = self.pausaconstante
         global last_datetime_format
         global precioactual
 
@@ -314,13 +317,16 @@ class Bits(bt.Strategy):
                 self.order = self.buy(size=self.y, price=self.data.open[0])
                 self.empieza = False
                 self.abierto = True
+                self.pausa = self.pausaconstante
 
-            if ((self.prevClose >= self.longTakeprofit or self.prevClose <= self.longStoploss) and self.abierto is True) and self.empieza is False:
+            if ((self.prevClose >= self.longTakeprofit or self.prevClose <= self.longStoploss) and self.abierto is True) and self.empieza is False and self.pausa <= 0:
                 self.shortTakeprofit = self.prevClose * (self.porcentajeBeneficioA) #B
                 self.shortStoploss = self.prevClose * (self.porcentajePerdidaA) #B
                 self.y = self.broker.get_cash() / self.data.open[0]
                 self.order = self.sell(size=self.y, price=self.data.open[0])
                 self.abierto = False
+
+            self.pausa = self.pausa - 1
 
     def stop(self):
         global precioactual
@@ -343,6 +349,7 @@ def opt_objective(trial):
 
     perprofitA = trial.suggest_float('perprofitA', 0.0, 1.0)
     perlostA = trial.suggest_float('perlostA', 1.0, 2.0)
+    pausaconst = trial.suggest_int('pausaconst', 0, 10)
     # perprofitB = trial.suggest_float('perprofitB', 0.0, 2.0)
     # perlostB = trial.suggest_float('perlostB', 0.0, 2.0)
 
@@ -352,7 +359,7 @@ def opt_objective(trial):
     cerebro.broker.setcash(cash=cash)
     # cerebro.addwriter(bt.WriterFile, out='analisis.txt')
     # cerebro.addanalyzer(bt.analyzers.PyFolio, _name='pyfolio')
-    cerebro.addstrategy(Bits, perprofitA=perprofitA, perlostA=perlostA)#, perprofitB=perprofitB, perlostB=perlostB)
+    cerebro.addstrategy(Bits, perprofitA=perprofitA, perlostA=perlostA, pausaconst=pausaconst) #, perprofitB=perprofitB, perlostB=perlostB)
     cerebro.adddata(datos)
     cerebro.run()
     return (float(cerebro.broker.get_value()))
