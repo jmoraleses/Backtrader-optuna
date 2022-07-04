@@ -296,6 +296,9 @@ class Bits(bt.Strategy):
         self.eur = 0.0
         self.abierto = False
         self.pausa = self.pausaconstante
+        # self.capital = 100.0
+        self.capital_bits = 0.0
+        self.prevCloseAnt = 0.0
         global last_datetime_format
         global precioactual
 
@@ -306,8 +309,11 @@ class Bits(bt.Strategy):
                                                 '%d-%m-%Y %H:%M:%S')
         if self.nowdatetime > self.auxdatetime:
 
-            if self.abierto is False and self.prevClose <= self.shortTakeprofit:
-                self.abierto = False
+            # if self.abierto is False:
+            self.capital_bits = self.broker.get_cash() / self.data.open[0]
+
+            # if self.abierto is False and self.prevClose <= self.shortTakeprofit:
+            #     self.abierto = False
 
             if ((self.prevClose <= self.shortTakeprofit or self.prevClose >= self.shortStoploss) and self.abierto is False) or self.empieza is True:
                 self.longTakeprofit = self.prevClose * (self.porcentajeBeneficioA)
@@ -318,12 +324,19 @@ class Bits(bt.Strategy):
                 self.abierto = True
                 self.pausa = self.pausaconstante
 
+                # if self.prevClose >= self.shortStoploss:
+                #     self.capital_bits = self.capital_bits - (self.capital_bits * abs(self.prevClose - self.prevCloseAnt))
+                #
+                # if self.prevClose <= self.shortTakeprofit:
+                #     self.capital_bits = self.capital_bits + (self.capital_bits * abs(self.prevClose - self.prevCloseAnt))
+
             if ((self.prevClose >= self.longTakeprofit or self.prevClose <= self.longStoploss) and self.abierto is True) and self.empieza is False and self.pausa <= 0:
                 self.shortTakeprofit = self.prevClose * (self.porcentajeBeneficioA) #B
                 self.shortStoploss = self.prevClose * (self.porcentajePerdidaA) #B
                 self.y = self.broker.get_cash() / self.data.open[0]
                 self.order = self.sell(size=self.y, price=self.data.open[0])
                 self.abierto = False
+                self.prevCloseAnt = self.prevClose
 
             self.pausa = self.pausa - 1
 
@@ -334,9 +347,21 @@ class Bits(bt.Strategy):
         # calculate the actual returns
         # print('Ganancias :{:.2f}'.format(self.broker.get_value()))
         print('value: {}, cash: {}'.format(str(self.broker.get_value()), str(self.broker.get_cash())))
-        print('pbeneficio: {}, pperdida: {}\n'.format(self.porcentajeBeneficioA, self.porcentajePerdidaA))#, self.porcentajeBeneficioB, self.porcentajePerdidaB))
+        print('pbeneficio: {}, pperdida: {}, pausa: {}, Capital Bits: {}\n'.format(self.porcentajeBeneficioA, self.porcentajePerdidaA, self.pausaconstante, self.capital_bits))#, self.porcentajeBeneficioB, self.porcentajePerdidaB))
+        # return self.capital_bits
 
-
+    # def getvalue(self, datas=None):
+    # #     """ Broker value = Cash + Value of the open positions
+    # #         https://community.backtrader.com/topic/1178/how-is-the-value-calculated/4
+    # #     """
+    # #     # if datas:
+    # #     #     # Return the value of open positions (@last price) plus cash.
+    # #     #     # Using Total cash here, as that represents account value accurately.
+    # #     #     return (self.getposition(datas[0]).size * datas[0].close[0]) + self.wallet_balance["total"]
+    # #     # else:
+    # #     #     # Return the wallet total
+    # #     #     return self.wallet_balance["total"]
+    #     return self.capital_bits
 
 cash = 1
 datos = 1
@@ -348,7 +373,7 @@ def opt_objective(trial):
 
     perprofitA = trial.suggest_float('perprofitA', 0.0, 1.0)
     perlostA = trial.suggest_float('perlostA', 1.0, 2.0)
-    pausaconst = trial.suggest_int('pausaconst', 0, 10)
+    pausaconst = trial.suggest_int('pausaconst', 1, 50)
     # perprofitB = trial.suggest_float('perprofitB', 0.0, 2.0)
     # perlostB = trial.suggest_float('perlostB', 0.0, 2.0)
 
@@ -361,7 +386,7 @@ def opt_objective(trial):
     cerebro.addstrategy(Bits, perprofitA=perprofitA, perlostA=perlostA, pausaconst=pausaconst) #, perprofitB=perprofitB, perlostB=perlostB)
     cerebro.adddata(datos)
     cerebro.run()
-    return (float(cerebro.broker.get_value()))
+    return float(cerebro.broker.get_value())
 
 
 if __name__ == '__main__':
