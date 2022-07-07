@@ -1,0 +1,125 @@
+//@version=5
+strategy(title='cryptosv5 avax', shorttitle='cryptosv5 avax', default_qty_type=strategy.percent_of_equity, default_qty_value=100.0, initial_capital=100.0, precision=8, overlay=true)  //default_qty_type=strategy.percent_of_equity, default_qty_value=10, overlay=true
+
+
+var price = open
+var begin = true
+var long = false
+var short = false
+var profitA = 1.0
+// var lossA = 1.0
+var profitB = 1.0
+// var lossB = 1.0
+var fin = false
+var y = 0.0
+var euros = 0.0
+var abierto = false
+var capital = 100.0
+var capital_bits = capital / open
+var openant= 0.0
+var tendenciaBajista = false
+var pausa = 0
+
+
+var pausa_const = 2
+var resultadoTendencia = ta.sma(open, pausa_const)
+profitA := 1.011739196718237  //long  verde profit, que suba lo justo
+profitB := 0.9886311097704606  //profit de short yellow, x por debajo de 1.0
+
+
+// lossA := 1.345  //long rojo stoploss justo por debajo de 1.0, mas bajo que profit de short?
+// lossB :=  1.146693785678958 //stoploss blue //desde 1, tiene que estar por encima del valor actual , es decir 1
+var longTakeprofit = open * profitA
+// var longStoploss = open * lossA
+var shortTakeprofit = open * profitB
+// var shortStoploss = open * lossA
+
+resultadoTendencia := ta.sma(open, pausa_const)
+if time > timestamp(2022, 07, 01, 00, 00)
+
+    // if abierto == false and open <= shortTakeprofit
+    //     abierto := false
+
+
+    capital_bits := strategy.equity / open
+
+
+
+    if pausa >= pausa_const
+        if resultadoTendencia > open
+            tendenciaBajista := true
+        else
+            tendenciaBajista := false
+
+
+        if (tendenciaBajista == true) and abierto == true
+            // strategy.close_all()
+            strategy.order('SHORT', strategy.short)
+            shortTakeprofit := open * profitB
+            if abierto == false
+                abierto := true
+            else
+                abierto := false
+            pausa := 0
+            // begin := true
+
+
+        else if (tendenciaBajista == false) and abierto == false
+            // strategy.close_all()
+            strategy.order("LONG", strategy.long)
+            longTakeprofit := open * profitA
+            if abierto == false
+                abierto := true
+            else
+                abierto := false
+            pausa := 0
+            // begin := true
+
+
+
+    ///////
+
+    if (open <= shortTakeprofit and abierto == false) or begin == true
+        price := open
+        longTakeprofit := open * profitA
+        // longStoploss := open * lossA
+        strategy.order("LONG", strategy.long)
+        // strategy.close_all()
+        begin := false
+        abierto := true
+        pausa := 0
+
+        // if open >= shortStoploss
+        //     capital_bits := capital_bits - ( capital_bits * math.abs(open - openant))
+
+        // if open <= shortTakeprofit
+        //     capital_bits := capital_bits + ( capital_bits * math.abs(open - openant))
+
+
+    if (open >= longTakeprofit and abierto == true) and begin == false
+        price := open
+        shortTakeprofit := open * profitB
+        // shortStoploss := open * lossA
+        strategy.order('SHORT', strategy.short)
+        abierto := false
+        openant := open
+        pausa := 0
+
+
+    pausa += 1
+
+
+    /////
+
+
+
+// plot(openant, title='TOTAL', linewidth=2, style=plot.style_linebr, color=color.orange)
+
+plot(capital_bits, title='TOTAL', linewidth=1, style=plot.style_linebr, color=color.yellow)
+
+// plot(longStoploss, title='LONG STOP LOSS', linewidth=2, style=plot.style_linebr, color=color.red)
+plot(longTakeprofit, title='LONG TAKE PROFIT', linewidth=2, style=plot.style_linebr, color=color.blue)
+
+// plot(shortStoploss, title='SHORT STOP LOSS', linewidth=2, style=plot.style_linebr, color=color.new(color.red, 0))
+plot(shortTakeprofit, title='SHORT TAKE PROFIT', linewidth=2, style=plot.style_linebr, color=color.new(color.green, 0))
+

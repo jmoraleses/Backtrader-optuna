@@ -274,7 +274,9 @@ class Bits(bt.Strategy):
         self.pausaconstante = self.params.pausaconst
         self.porcentajeBeneficioB = self.params.perprofitB
         # self.porcentajePerdidaB = self.params.perlostB
+        # self.pausaconstante = 0
         self.order = None
+        self.resultadoTendencia = bt.ind.EMA(period=int(self.pausaconstante))
         # self.ma_fast = bt.ind.EMA(period=int(self.params.fast))
         # self.ma_slow = bt.ind.EMA(period=int(self.params.slow))
         # self.crossover = bt.ind.CrossOver(self.ma_fast, self.ma_slow)
@@ -295,7 +297,7 @@ class Bits(bt.Strategy):
         # self.btc = 0.0 #self.coins
         self.eur = 0.0
         self.abierto = False
-        self.pausa = self.pausaconstante
+        self.pausa = 0
         # self.capital = 100.0
         self.capital_bits = 0.0
         self.prevCloseAnt = 0.0
@@ -307,6 +309,8 @@ class Bits(bt.Strategy):
         self.auxdatetime = dt.datetime.strptime(last_datetime_format, '%d-%m-%Y %H:%M:%S')
         self.nowdatetime = dt.datetime.strptime(self.data.datetime.datetime().strftime('%d-%m-%Y %H:%M:%S'),
                                                 '%d-%m-%Y %H:%M:%S')
+
+        # self.resultadoTendencia = bt.ind.EMA(period=int(self.pausaconstante))
         if self.nowdatetime > self.auxdatetime:
 
             # if self.abierto is False:
@@ -315,15 +319,49 @@ class Bits(bt.Strategy):
             # if self.abierto is False and self.prevClose <= self.shortTakeprofit:
             #     self.abierto = False
 
+            #si el precio en 50 velas anteriores es mayor, es que está a la baja, y por tanto
+            if self.pausa >= self.pausaconstante:
+                if self.resultadoTendencia > self.data.open[0]:
+                    self.tendenciaBajista = True
+                else:
+                    self.tendenciaBajista = False
+
+                if self.tendenciaBajista is True and self.abierto is True:  # and self.pausa >= self.pausaconstante:
+                    self.pausa = 0
+                    self.y = self.broker.get_cash() / self.data.open[0]
+                    self.close(exectype=bt.Order.Market, size=self.y)
+                    self.y = self.broker.get_cash() / self.data.open[0]
+                    self.order = self.sell(size=self.y, price=self.data.open[0])
+                    self.shortTakeprofit = self.prevClose * (self.porcentajeBeneficioB)  # B
+                    if self.abierto is False:
+                        self.abierto = True
+                    else:
+                        self.abierto = False
+
+                elif self.tendenciaBajista is False and self.abierto is False:  # and self.pausa >= self.pausaconstante:
+                    self.pausa = 0
+                    self.y = self.broker.get_cash() / self.data.open[0]
+                    self.close(exectype=bt.Order.Market, size=self.y)
+                    self.y = self.broker.get_cash() / self.data.open[0]
+                    self.order = self.buy(size=self.y, price=self.data.open[0])
+                    self.longTakeprofit = self.prevClose * (self.porcentajeBeneficioA)
+                    if self.abierto is False:
+                        self.abierto = True
+                    else:
+                        self.abierto = False
+                    # self.begin = True
+
+                ###
+
             # if ((self.prevClose <= self.shortTakeprofit or self.prevClose >= self.shortStoploss) and self.abierto is False) or self.empieza is True:
-            if (self.prevClose <= self.shortTakeprofit and self.abierto is False) or self.empieza is True:
+            if ((self.prevClose <= self.shortTakeprofit and self.abierto is False) or (self.tendenciaBajista is True and self.pausa > 50)) or self.empieza is True:
                 self.longTakeprofit = self.prevClose * (self.porcentajeBeneficioA)
                 # self.longStoploss = self.prevClose * (self.porcentajePerdidaA)
                 self.y = self.broker.get_cash() / self.data.open[0]
                 self.order = self.buy(size=self.y, price=self.data.open[0])
                 self.empieza = False
                 self.abierto = True
-                self.pausa = self.pausaconstante
+                self.pausa = 0
 
                 # if self.prevClose >= self.shortStoploss:
                 #     self.capital_bits = self.capital_bits - (self.capital_bits * abs(self.prevClose - self.prevCloseAnt))
@@ -332,15 +370,21 @@ class Bits(bt.Strategy):
                 #     self.capital_bits = self.capital_bits + (self.capital_bits * abs(self.prevClose - self.prevCloseAnt))
 
             # if ((self.prevClose >= self.longTakeprofit or self.prevClose <= self.longStoploss) and self.abierto is True) and self.empieza is False and self.pausa <= 0:
-            if (self.prevClose >= self.longTakeprofit and self.abierto is True) and self.empieza is False and self.pausa <= 0:
+            if ((self.prevClose >= self.longTakeprofit and self.abierto is True) and self.empieza is False) or (self.tendenciaBajista is False and self.pausa > 50): # and self.pausa <= 0:
                 self.shortTakeprofit = self.prevClose * (self.porcentajeBeneficioB) #B
                 # self.shortStoploss = self.prevClose * (self.porcentajePerdidaB) #B
                 self.y = self.broker.get_cash() / self.data.open[0]
                 self.order = self.sell(size=self.y, price=self.data.open[0])
                 self.abierto = False
                 self.prevCloseAnt = self.prevClose
+                self.pausa = 0
 
-            self.pausa = self.pausa - 1
+            self.pausa = self.pausa + 1
+
+            ####
+
+
+
 
     def stop(self):
         global precioactual
@@ -373,10 +417,10 @@ def opt_objective(trial):
     global cash
     global precioactual
 
-    perprofitA = trial.suggest_float('perprofitA', 1.0, 1.10)
+    perprofitA = trial.suggest_float('perprofitA', 1.00, 1.25)
     # perlostA = trial.suggest_float('perlostA', 1.0, 2.0)
-    pausaconst = trial.suggest_int('pausaconst', 500, 1000)
-    perprofitB = trial.suggest_float('perprofitB', 0.95, 1.0)
+    pausaconst = trial.suggest_int('pausaconst', 1, 10)
+    perprofitB = trial.suggest_float('perprofitB', 0.90, 1.00)
     # perlostB = trial.suggest_float('perlostB', 1.0, 2.0)
 
     cerebro = bt.Cerebro()
@@ -385,7 +429,7 @@ def opt_objective(trial):
     cerebro.broker.setcash(cash=cash)
     # cerebro.addwriter(bt.WriterFile, out='analisis.txt')
     # cerebro.addanalyzer(bt.analyzers.PyFolio, _name='pyfolio')
-    cerebro.addstrategy(Bits, perprofitA=perprofitA, pausaconst=pausaconst, perprofitB=perprofitB) # ,perlostA=perlostA, perlostB=perlostB)
+    cerebro.addstrategy(Bits, perprofitA=perprofitA, perprofitB=perprofitB, pausaconst=pausaconst) # , perlostA=perlostA, perlostB=perlostB)
     cerebro.adddata(datos)
     cerebro.run()
     return float(cerebro.broker.get_value())
